@@ -1,0 +1,69 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  //every modal needs the id
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  name            String? // optional
+  username        String?   @unique
+  bio             String?
+  email           String?   @unique
+  emailVerified   DateTime?
+  image           String?
+  coverImage      String?
+  profileImage    String?
+  hashedPassword  String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  followingIds    String[]  @db.ObjectId
+  hasNotification Boolean?
+
+  //relations
+  posts         Post[] // user have post with an relation to Post array
+  comments      Comment[]
+  notifications Notification[]
+}
+
+// making the model post
+model Post {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String   @db.ObjectId
+  likedIds  String[] @db.ObjectId
+
+  //Relations
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade) // so post userid refrenced to the user model id
+  comments Comment[] // posts also have relations with their comments also
+}
+
+model Comment {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String   @db.ObjectId
+  postId    String   @db.ObjectId
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  body      String
+  createdAt DateTime @default(now())
+  userId    String   @db.ObjectId
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
